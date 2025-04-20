@@ -6,6 +6,9 @@ const {
   loginUser,
   getMe,
   logoutUser,
+  verifyResetToken,
+  forgotPassword,
+  resetPassword,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const { body } = require('express-validator');
@@ -30,12 +33,26 @@ const loginValidation = [
     body('password', 'Password is required').exists()
 ];
 
+const forgotPasswordValidation = [
+    body('email', 'Please include a valid email').isEmail().normalizeEmail(),
+];
+
+const resetPasswordValidation = [
+    // No need to validate token here (controller handles it)
+    body('password', 'Password must be 6 or more characters').isLength({ min: 6 })
+    // Optional: Add password confirmation validation if needed
+    // body('passwordConfirm').custom((value, { req }) => { ... })
+];
+
 // Define routes
 router.post('/register', registerValidation, registerUser);
 router.post('/verify-otp', verifyOtpValidation, verifyOTP); 
 router.post('/login', loginValidation, loginUser); 
 router.get('/me', protect, getMe);
 router.post('/logout', protect, logoutUser);
+router.post('/forgot-password', forgotPasswordValidation, forgotPassword);
+router.get('/verify-reset-token/:token', verifyResetToken);
+router.post('/reset-password', resetPasswordValidation, resetPassword); 
 
 
 module.exports = router;
