@@ -12,7 +12,7 @@ connectDB();
 
 const app = express();
 
-const allowedOrigins = ['http://localhost:3000']; 
+const allowedOrigins = ['http://localhost:3000','https://risk-inn-revamped-23.vercel.app/']; 
 
 const corsOptions = {
   origin: function (origin, callback) {
