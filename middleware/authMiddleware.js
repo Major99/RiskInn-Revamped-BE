@@ -61,16 +61,23 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-// Optional: Middleware to restrict access based on roles
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) {
+        res.status(401);
+        throw new Error('Not authorized, no user found for role check');
+    }
+    if (!roles.includes(req.user.role)) {
       res.status(403); // Forbidden
-      throw new Error(`User role ${req.user ? req.user.role : 'undefined'} is not authorized to access this route`);
+      throw new Error(`User role ${req.user.role} is not authorized to access this route`);
     }
     next();
   };
 };
 
+const admin = authorize('admin', 'superadmin');
+const mentor = authorize('mentor', 'admin', 'superadmin');
+const recruiter = authorize('recruiter', 'admin', 'superadmin');
 
-module.exports = { protect, authorize };
+
+module.exports = { protect, authorize, admin, mentor, recruiter };

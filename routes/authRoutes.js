@@ -1,14 +1,16 @@
 // routes/authRoutes.js
 const express = require('express');
 const {
-  registerUser,
-  verifyOTP, // Import new controller
-  loginUser,
-  getMe,
-  logoutUser,
-  verifyResetToken,
-  forgotPassword,
-  resetPassword,
+    registerUser,
+    verifyOTP, // Import new controller
+    loginUser,
+    getMe,
+    logoutUser,
+    verifyResetToken,
+    forgotPassword,
+    resetPassword,
+    initiateGoogleAuth,
+    handleGoogleCallback,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const { body } = require('express-validator');
@@ -46,13 +48,15 @@ const resetPasswordValidation = [
 
 // Define routes
 router.post('/register', registerValidation, registerUser);
-router.post('/verify-otp', verifyOtpValidation, verifyOTP); 
-router.post('/login', loginValidation, loginUser); 
+router.post('/verify-otp', verifyOtpValidation, verifyOTP);
+router.post('/login', loginValidation, loginUser);
 router.get('/me', protect, getMe);
 router.post('/logout', protect, logoutUser);
 router.post('/forgot-password', forgotPasswordValidation, forgotPassword);
 router.get('/verify-reset-token/:token', verifyResetToken);
-router.post('/reset-password', resetPasswordValidation, resetPassword); 
+router.post('/reset-password', resetPasswordValidation, resetPassword);
+router.get('/google', initiateGoogleAuth);
+router.get('/google/callback', handleGoogleCallback);
 
 
 module.exports = router;

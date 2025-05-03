@@ -5,6 +5,7 @@ const { validationResult } = require('express-validator');
 const sendEmail = require('../utils/sendEmail'); // Import email utility
 const { generateOTP, calculateExpiry } = require('../utils/otpUtils'); // Import OTP utility
 const crypto = require('crypto');
+const { getGoogleAuthUrl, getGoogleUserInfo } = require('../utils/googleAuth'); // Adjust path
 
 const registerUser = asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
@@ -116,8 +117,6 @@ const verifyOTP = asyncHandler(async (req, res, next) => {
 });
 
 
-// --- Keep other controllers (loginUser, getMe, logoutUser) ---
-// Note: loginUser should now check for 'isVerified: true'
 const loginUser = asyncHandler(async (req, res, next) => {
     // Assuming validation is done before this via express-validator in routes
     const { email, password } = req.body;
@@ -242,10 +241,6 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
     });
 });
 
-
-// @desc    Verify Password Reset Token
-// @route   GET /api/v1/auth/verify-reset-token/:token
-// @access  Public
 const verifyResetToken = asyncHandler(async (req, res, next) => {
     // 1) Get token from URL params
     const plainToken = req.params.token;
@@ -272,10 +267,6 @@ const verifyResetToken = asyncHandler(async (req, res, next) => {
     }
 });
 
-
-// @desc    Reset password using token
-// @route   POST /api/v1/auth/reset-password/:token
-// @access  Public
 const resetPassword = asyncHandler(async (req, res, next) => {
      const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -325,7 +316,78 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 
 });
 
+const initiateGoogleAuth = asyncHandler(async (req, res) => {
+    const url = getGoogleAuthUrl();
+    res.json({ url });
+});
+
+const handleGoogleCallback = asyncHandler(async (req, res) => {
+    const code = req.query.code; // Get the authorization code from Google
+
+    if (!code) {
+        // Redirect back to frontend login with error
+        return res.redirect(`${process.env.FRONTEND_LOGIN_URL || '/login'}?error=GoogleAuthFailed`);
+    }
+
+    try {
+        // Exchange code for tokens and get user info
+        const googleUserInfo = await getGoogleUserInfo(code);
+
+        if (!googleUserInfo || !googleUserInfo.email) {
+            throw new Error('Could not retrieve user information from Google.');
+        }
+
+        // Find or create user in your database
+        let user = await User.findOne({ email: googleUserInfo.email });
+
+        if (user) {
+            // User exists, update googleId if missing and provider mismatch
+            if (!user.googleId) {
+                user.googleId = googleUserInfo.googleId;
+            }
+            // Update provider if they previously used email
+            if (user.authProvider !== 'google') {
+                user.authProvider = 'google';
+            }
+             // Optionally update avatar if missing or different
+             if (!user.avatarUrl && googleUserInfo.avatarUrl) {
+                 user.avatarUrl = googleUserInfo.avatarUrl;
+             }
+             user.isVerified = true; // Google emails are verified
+             user.lastLogin = Date.now();
+             await user.save();
+        } else {
+            // Create new user
+            user = await User.create({
+                googleId: googleUserInfo.googleId,
+                name: googleUserInfo.name,
+                email: googleUserInfo.email,
+                avatarUrl: googleUserInfo.avatarUrl,
+                authProvider: 'google',
+                isVerified: true,
+                role: 'student', // Default role
+                lastLogin: Date.now(),
+            });
+        }
+
+        // Generate your application's JWT
+        const appToken = generateToken(user._id);
+
+        // Redirect user to your frontend callback page with the token
+        // Pass token securely (e.g., query param for simple cases, state param, or set HttpOnly cookie)
+        // Using query param for this example:
+        res.redirect(`${process.env.FRONTEND_AUTH_CALLBACK_URL}?token=${appToken}`);
+
+    } catch (error) {
+        console.error('Google Callback Error:', error);
+        // Redirect back to frontend login with a generic error
+        res.redirect(`${process.env.FRONTEND_LOGIN_URL || '/login'}?error=GoogleAuthFailed`);
+    }
+});
+
 module.exports = {
+    initiateGoogleAuth,
+    handleGoogleCallback,
     registerUser,
     verifyOTP, 
     loginUser,

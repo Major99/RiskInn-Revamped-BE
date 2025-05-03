@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const uploadRoutes = require('./routes/uploadRoutes');
 const authRoutes = require('./routes/authRoutes'); 
+const contactRoutes = require('./routes/contactRoutes'); 
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 
 dotenv.config(); 
@@ -38,6 +39,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/v1/auth', authRoutes); 
 app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/submitContactForm', contactRoutes);
 
 const PORT = process.env.PORT || 5000; 
 
