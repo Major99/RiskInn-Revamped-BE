@@ -406,7 +406,7 @@ const handleGoogleCallback = asyncHandler(async (req, res) => {
         console.log("Application token generated successfully.");
 
         // 4. Redirect user to your frontend callback page with the token
-        const redirectUrl = `${frontendCallbackUrl}?token=${appToken}`;
+        const redirectUrl = `${frontendCallbackUrl}?token=${appToken}&name=${googleUserInfo.name}&email=${googleUserInfo.email}&role=student&avatarUrl=${googleUserInfo.avatarUrl}`;
         console.log(`Redirecting user to frontend callback: ${redirectUrl}`);
         res.redirect(redirectUrl);
 
