@@ -1,74 +1,72 @@
-const { OAuth2Client } = require('google-auth-library');
+    // utils/googleAuth.js
+    const { OAuth2Client } = require('google-auth-library');
 
-const client = new OAuth2Client(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_CALLBACK_URL // The URL Google redirects TO on your backend
-);
+    // --- Log environment variables right before use ---
+    console.log("--- Google Auth Util ---");
+    console.log("Attempting to read GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID ? "Exists" : "MISSING or Undefined");
+    console.log("Attempting to read GOOGLE_CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET ? "Exists" : "MISSING or Undefined");
+    console.log("Attempting to read GOOGLE_CALLBACK_URL:", process.env.GOOGLE_CALLBACK_URL ? "Exists" : "MISSING or Undefined");
+    // --- End Log ---
 
-const getGoogleAuthUrl = () => {
-    const scopes = [
-        'https://www.googleapis.com/auth/userinfo.profile',
-        'https://www.googleapis.com/auth/userinfo.email',
-    ];
+    // Ensure variables are loaded before creating the client
+    const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+    const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+    const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL;
 
-    console.log(
-        process.env.GOOGLE_CLIENT_ID,
-        "========",
-        process.env.GOOGLE_CLIENT_SECRET,
-        "========",
-        process.env.GOOGLE_CALLBACK_URL 
-    )
-
-    return client.generateAuthUrl({
-        access_type: 'offline', // Request refresh token
-        scope: scopes,
-        prompt: 'consent', // Optional: Forces consent screen
-    });
-};
-
-const getGoogleUserInfo = async (code) => {
-    try {
-        // Exchange authorization code for tokens
-        console.log(code)
-        const { tokens } = await client.getToken(code);
-        // Set credentials on the client
-        client.setCredentials(tokens);
-
-        // Optionally store tokens.access_token and tokens.refresh_token if needed
-
-        // Fetch user profile using the ID token or access token
-        // Using ID token is generally preferred for profile info
-        console.log(tokens)
-        if (tokens.id_token) {
-            const ticket = await client.verifyIdToken({
-                idToken: tokens.id_token,
-                audience: process.env.GOOGLE_CLIENT_ID,
-            });
-            const payload = ticket.getPayload();
-            return {
-                googleId: payload.sub, // Google's unique ID
-                email: payload.email,
-                name: payload.name,
-                avatarUrl: payload.picture,
-                isVerified: payload.email_verified,
-            };
-        } else {
-             // Fallback or alternative: Use access token to call Google People API
-             // Requires enabling People API in Google Cloud Console
-             console.warn('ID token not found, cannot fetch user info via ID token.');
-             // const people = google.people({ version: 'v1', auth: client });
-             // const me = await people.people.get({ resourceName: 'people/me', personFields: 'names,emailAddresses,photos' });
-             // // Extract info from 'me' response...
-             return null;
-        }
-    } catch (error) {
-        console.error('Error exchanging code or getting user info:', error);
-        throw new Error('Failed to authenticate with Google');
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_CALLBACK_URL) {
+        console.error("FATAL ERROR: Missing required Google OAuth environment variables!");
+        // Optionally throw an error to prevent server start without proper config
+        // throw new Error("Missing Google OAuth environment variables!");
     }
-};
 
-module.exports = {
-    getGoogleAuthUrl,
-    getGoogleUserInfo,
-};
+    const client = new OAuth2Client(
+        GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET,
+        GOOGLE_CALLBACK_URL
+    );
+
+    const getGoogleAuthUrl = () => {
+        const scopes = [
+            'https://www.googleapis.com/auth/userinfo.profile',
+            'https://www.googleapis.com/auth/userinfo.email',
+        ];
+
+        try {
+            const url = client.generateAuthUrl({
+                access_type: 'offline',
+                scope: scopes,
+                prompt: 'consent',
+            });
+             console.log("Generated Google Auth URL:", url); // Log the generated URL
+             return url;
+        } catch (error) {
+            console.error("Error generating Google Auth URL:", error);
+            throw new Error("Could not generate Google Auth URL");
+        }
+    };
+
+    const getGoogleUserInfo = async (code) => {
+        // ... (keep the rest of this function as before) ...
+        try {
+            const { tokens } = await client.getToken(code);
+            client.setCredentials(tokens);
+            if (tokens.id_token) {
+                const ticket = await client.verifyIdToken({
+                    idToken: tokens.id_token,
+                    audience: GOOGLE_CLIENT_ID, // Use variable here too
+                });
+                const payload = ticket.getPayload();
+                return { /* ... user info ... */ };
+            }
+            return null;
+        } catch (error) {
+            console.error('Error exchanging code or getting user info:', error);
+            throw new Error('Failed to authenticate with Google');
+        }
+    };
+
+    module.exports = {
+        getGoogleAuthUrl,
+        getGoogleUserInfo,
+    };
+    
