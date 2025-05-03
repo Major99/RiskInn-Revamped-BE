@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const generateToken = require('../utils/generateToken');
+const {generateToken,generateGAuthToken} = require('../utils/generateToken');
 const asyncHandler = require('../middleware/asyncHandler');
 const { validationResult } = require('express-validator');
 const sendEmail = require('../utils/sendEmail'); // Import email utility
@@ -399,7 +399,7 @@ const handleGoogleCallback = asyncHandler(async (req, res) => {
 
         // 3. Generate your application's JWT
         console.log("Generating application token for user ID:", user._id);
-        const appToken = generateToken(user._id);
+        const appToken = generateGAuthToken(user._id);
         if (!appToken) {
              throw new Error("Failed to generate application token.");
         }

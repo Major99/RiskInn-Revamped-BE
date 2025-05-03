@@ -1,4 +1,3 @@
-// utils/googleAuth.js
 const { OAuth2Client } = require('google-auth-library');
 
 // Load variables immediately
@@ -6,13 +5,11 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL; // Backend callback
 
-// Log variables at module load time (useful for serverless environments)
 console.log("[Google Auth Util] Initializing with Client ID:", GOOGLE_CLIENT_ID ? "Loaded" : "MISSING!");
 console.log("[Google Auth Util] Callback URL:", GOOGLE_CALLBACK_URL);
 
 if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_CALLBACK_URL) {
     console.error("FATAL: Missing essential Google OAuth ENV VARS at initialization!");
-    // Consider throwing an error or handling this state appropriately
 }
 
 const client = new OAuth2Client(
