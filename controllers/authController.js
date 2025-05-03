@@ -322,41 +322,62 @@ const initiateGoogleAuth = asyncHandler(async (req, res) => {
 });
 
 const handleGoogleCallback = asyncHandler(async (req, res) => {
-    const code = req.query.code; // Get the authorization code from Google
+    const code = req.query.code;
+    // Define frontend URLs - Ensure these are set in your .env!
+    const frontendLoginUrl = process.env.FRONTEND_LOGIN_URL || '/login';
+    const frontendCallbackUrl = process.env.FRONTEND_AUTH_CALLBACK_URL; // e.g., http://localhost:3000/auth/callback
+
+    // Check if required frontend redirect URL is configured
+    if (!frontendCallbackUrl) {
+        console.error("FATAL ERROR: FRONTEND_AUTH_CALLBACK_URL environment variable is not set!");
+        // Redirect to a generic error page or login with a specific config error
+        return res.redirect(`${frontendLoginUrl}?error=ConfigurationError`);
+    }
 
     if (!code) {
-        // Redirect back to frontend login with error
-        return res.redirect(`${process.env.FRONTEND_LOGIN_URL || '/login'}?error=GoogleAuthFailed`);
+        console.warn("Google callback missing 'code' parameter.");
+        return res.redirect(`${frontendLoginUrl}?error=GoogleAuthNoCode`);
     }
 
     try {
-        // Exchange code for tokens and get user info
+        console.log("Received Google callback with code:", code); // Log: Received code
+
+        // 1. Exchange code for tokens and get user info
         const googleUserInfo = await getGoogleUserInfo(code);
+        console.log("Retrieved Google User Info:", googleUserInfo); // Log: Got user info
 
         if (!googleUserInfo || !googleUserInfo.email) {
-            throw new Error('Could not retrieve user information from Google.');
+            // This specific error might come from getGoogleUserInfo's catch block already logging
+            throw new Error('Could not retrieve valid user information from Google.');
         }
 
-        // Find or create user in your database
+        // 2. Find or create user in your database
+        console.log("Finding or creating user for email:", googleUserInfo.email);
         let user = await User.findOne({ email: googleUserInfo.email });
 
         if (user) {
+            console.log("Existing user found:", user._id);
             // User exists, update googleId if missing and provider mismatch
             if (!user.googleId) {
                 user.googleId = googleUserInfo.googleId;
+                console.log("Updated googleId for existing user.");
             }
             // Update provider if they previously used email
             if (user.authProvider !== 'google') {
                 user.authProvider = 'google';
+                console.log("Updated authProvider to 'google' for existing user.");
             }
              // Optionally update avatar if missing or different
              if (!user.avatarUrl && googleUserInfo.avatarUrl) {
                  user.avatarUrl = googleUserInfo.avatarUrl;
+                 console.log("Updated avatarUrl for existing user.");
              }
              user.isVerified = true; // Google emails are verified
              user.lastLogin = Date.now();
              await user.save();
+             console.log("Existing user updated successfully.");
         } else {
+            console.log("User not found, creating new user...");
             // Create new user
             user = await User.create({
                 googleId: googleUserInfo.googleId,
@@ -368,20 +389,40 @@ const handleGoogleCallback = asyncHandler(async (req, res) => {
                 role: 'student', // Default role
                 lastLogin: Date.now(),
             });
+            console.log("New user created:", user._id);
         }
 
-        // Generate your application's JWT
-        const appToken = generateToken(user._id);
+        // Ensure we have a valid user object with an ID
+        if (!user || !user._id) {
+            throw new Error("User object is invalid after find/create operation.");
+        }
 
-        // Redirect user to your frontend callback page with the token
-        // Pass token securely (e.g., query param for simple cases, state param, or set HttpOnly cookie)
-        // Using query param for this example:
-        res.redirect(`${process.env.FRONTEND_AUTH_CALLBACK_URL}?token=${appToken}`);
+        // 3. Generate your application's JWT
+        console.log("Generating application token for user ID:", user._id);
+        const appToken = generateToken(user._id);
+        if (!appToken) {
+             throw new Error("Failed to generate application token.");
+        }
+        console.log("Application token generated successfully.");
+
+        // 4. Redirect user to your frontend callback page with the token
+        const redirectUrl = `${frontendCallbackUrl}?token=${appToken}`;
+        console.log(`Redirecting user to frontend callback: ${redirectUrl}`);
+        res.redirect(redirectUrl);
 
     } catch (error) {
-        console.error('Google Callback Error:', error);
-        // Redirect back to frontend login with a generic error
-        res.redirect(`${process.env.FRONTEND_LOGIN_URL || '/login'}?error=GoogleAuthFailed`);
+        // --- DETAILED ERROR LOGGING ---
+        console.error('--- Google Callback Error ---');
+        console.error('Timestamp:', new Date().toISOString());
+        console.error('Error Message:', error.message);
+        console.error('Error Stack:', error.stack); // Log the full stack trace
+        if (error.response?.data) { // Log detailed error from Google if available
+             console.error('Google API Error Response:', error.response.data);
+        }
+        // --- End Detailed Logging ---
+
+        // Redirect back to frontend login with a generic error for the user
+        res.redirect(`${frontendLoginUrl}?error=GoogleAuthFailed`);
     }
 });
 
