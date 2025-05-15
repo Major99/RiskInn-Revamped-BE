@@ -1,15 +1,29 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors'); 
-const connectDB = require('./config/db');
-const uploadRoutes = require('./routes/uploadRoutes');
-const authRoutes = require('./routes/authRoutes'); 
-const contactRoutes = require('./routes/contactRoutes'); 
-const { errorHandler, notFound } = require('./middleware/errorMiddleware');
+import express from 'express';
+import dotenv from 'dotenv';
 
-dotenv.config(); 
+const result = dotenv.config(); 
 
-connectDB();
+if (result.error) {
+  console.error('Error loading .env file:', result.error);
+}
+import cors from 'cors'; 
+import uploadRoutes from './routes/uploadRoutes.js';
+import authRoutes from './routes/authRoutes.js'; 
+import contactRoutes from './routes/contactRoutes.js'; 
+import courseContactDataRoutes from './routes/coursesContactRoutes.js'; 
+import { errorHandler, notFound } from './middleware/errorMiddleware.js';
+import { connect } from 'mongoose';
+
+// connectDB();
+
+  try {
+    const conn = await connect(process.env.MONGODB_URI, {});
+
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`MongoDB Connection Error: ${error.message}`);
+    process.exit(1); // Exit process with failure
+  }
 
 const app = express();
 
@@ -40,6 +54,7 @@ app.get('/', (req, res) => {
 app.use('/api/v1/auth', authRoutes); 
 app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/submitContactForm', contactRoutes);
+app.use('/api/v1/course-contact', courseContactDataRoutes);
 
 const PORT = process.env.PORT || 5000; 
 
