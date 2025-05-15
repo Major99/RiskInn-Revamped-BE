@@ -1,10 +1,12 @@
 import express from 'express';
 import dotenv from 'dotenv';
-
-const result = dotenv.config(); 
-
-if (result.error) {
-  console.error('Error loading .env file:', result.error);
+if (process.env.NODE_ENV !== 'production') {
+  const result = dotenv.config(); 
+  if (result.error) {
+    // In development, it's useful to know if the .env file is missing or malformed
+    console.error("Warning: Error loading .env file in development:", result.error.message);
+    // You might choose to throw result.error here only in a non-production setup if a .env file is critical for local dev
+  }
 }
 import cors from 'cors'; 
 import uploadRoutes from './routes/uploadRoutes.js';
