@@ -7,63 +7,62 @@ const createBrochureEmailHtml = (userName, courseName, brochureLink, logoUrl = '
     const currentYear = new Date().getFullYear();
     // Basic inline styling for broader email client compatibility
     return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Course Brochure - ${courseName}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; margin: 0; padding: 0; background-color: #f0f4f8; color: #333333; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-    .email-wrapper { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
-    .email-header { background-color: #00906D; padding: 25px 30px; text-align: center; }
-    .email-header img { max-width: 120px; margin-bottom: 10px; }
-    .email-header h1 { color: #ffffff; font-size: 24px; margin: 0; font-weight: 600; }
-    .email-body { padding: 30px; font-size: 15px; line-height: 1.65; }
-    .email-body h2 { color: #007a5c; font-size: 20px; margin-top: 0; margin-bottom: 15px; font-weight: 600;}
-    .email-body p { margin-bottom: 15px; }
-    .email-body strong { color: #2d3748; }
-    .button-container { text-align: center; margin: 25px 0; }
-    .button {
-      background-color: #00906D; color: #ffffff !important; padding: 12px 25px; text-decoration: none !important;
-      border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;
-      border: none; cursor: pointer; transition: background-color 0.2s ease-in-out;
-    }
-    .button:hover { background-color: #007a5c; }
-    .email-footer { text-align: center; padding: 20px 30px; background-color: #f7fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #718096; }
-    .email-footer a { color: #00906D; text-decoration: none; }
-    .email-footer a:hover { text-decoration: underline; }
-    .highlight { color: #00906D; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <div class="email-wrapper">
-    <div class="email-header">
-      ${logoUrl ? `<a href="https://www.riskinn.com" target="_blank"><img src="${logoUrl}" alt="RiskInn Logo"></a>` : ''}
-      <h1>Thank You for Your Inquiry!</h1>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Course Brochure - ${courseName}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; margin: 0; padding: 0; background-color: #f0f4f8; color: #333333; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .email-wrapper { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .email-header { background-color: #00906D; padding: 25px 30px; text-align: center; }
+        .email-header img { max-width: 120px; margin-bottom: 10px; }
+        .email-header h1 { color: #ffffff; font-size: 24px; margin: 0; font-weight: 600; }
+        .email-body { padding: 30px; font-size: 15px; line-height: 1.65; }
+        .email-body h2 { color: #007a5c; font-size: 20px; margin-top: 0; margin-bottom: 15px; font-weight: 600;}
+        .email-body p { margin-bottom: 15px; }
+        .email-body strong { color: #2d3748; }
+        .button-container { text-align: center; margin: 25px 0; }
+        .button {
+        background-color: #00906D; color: #ffffff !important; padding: 12px 25px; text-decoration: none !important;
+        border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;
+        border: none; cursor: pointer; transition: background-color 0.2s ease-in-out;
+        }
+        .button:hover { background-color: #007a5c; }
+        .email-footer { text-align: center; padding: 20px 30px; background-color: #f7fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #718096; }
+        .email-footer a { color: #00906D; text-decoration: none; }
+        .email-footer a:hover { text-decoration: underline; }
+        .highlight { color: #00906D; font-weight: bold; }
+    </style>
+    </head>
+    <body>
+    <div class="email-wrapper">
+        <div class="email-header">
+        ${logoUrl ? `<a href="https://www.riskinn.com" target="_blank"><img src="${logoUrl}" alt="Risk Inn Logo"></a>` : ''}
+        <h1>Thank You for Your Inquiry!</h1>
+        </div>
+        <div class="email-body">
+        <h2>Hello ${userName || 'Valued Inquirer'},</h2>
+        <p>Thank you for reaching out to Risk Inn and showing interest in our course: <strong class="highlight">${courseName}</strong>.</p>
+        <p>We're delighted to provide you with more information. You can download the course brochure by clicking the button below:</p>
+        ${brochureLink ? `
+        <div class="button-container">
+            <a href="${brochureLink}" target="_blank" class="button">Download Brochure</a>
+        </div>
+        ` : '<p><em>Brochure details will be sent shortly in a separate communication.</em></p>'}
+        <p>Our team will also be in touch soon to discuss your learning goals and answer any further questions you might have.</p>
+        <p>In the meantime, feel free to explore more about Risk Inn and our offerings on our <a href="https://www.riskinn.com" target="_blank" style="color: #00906D; text-decoration: none;">website</a>.</p>
+        <p>We look forward to helping you achieve your career aspirations!</p>
+        <p>Best regards,<br>The Risk Inn Team</p>
+        </div>
+        <div class="email-footer">
+        &copy; ${currentYear} Risk Inn Pvt. Ltd. All rights reserved.<br>
+        <a href="https://www.riskinn.com/privacy-policy" target="_blank">Privacy Policy</a> | <a href="https://www.riskinn.com/contact" target="_blank">Contact Us</a>
+        </div>
     </div>
-    <div class="email-body">
-      <h2>Hello ${userName || 'Valued Inquirer'},</h2>
-      <p>Thank you for reaching out to RiskInn and showing interest in our course: <strong class="highlight">${courseName}</strong>.</p>
-      <p>We're delighted to provide you with more information. You can download the course brochure by clicking the button below:</p>
-      ${brochureLink ? `
-      <div class="button-container">
-        <a href="${brochureLink}" target="_blank" class="button">Download Brochure</a>
-      </div>
-      ` : '<p><em>Brochure details will be sent shortly in a separate communication.</em></p>'}
-      <p>Our team will also be in touch soon to discuss your learning goals and answer any further questions you might have.</p>
-      <p>In the meantime, feel free to explore more about RiskInn and our offerings on our <a href="https://www.riskinn.com" target="_blank" style="color: #00906D; text-decoration: none;">website</a>.</p>
-      <p>We look forward to helping you achieve your career aspirations!</p>
-      <p>Best regards,<br>The RiskInn Team</p>
-    </div>
-    <div class="email-footer">
-      &copy; ${currentYear} RiskInn Pvt. Ltd. All rights reserved.<br>
-      Kanpur, Uttar Pradesh, India<br>
-      <a href="https://www.riskinn.com/privacy-policy" target="_blank">Privacy Policy</a> | <a href="https://www.riskinn.com/contact" target="_blank">Contact Us</a>
-    </div>
-  </div>
-</body>
-</html>`;
+    </body>
+    </html>`;
 };
 
 
@@ -138,7 +137,7 @@ const submitCourseInquiry = async (req, res) => {
             try {
                 await sendEmail({
                     email: userEmail,
-                    subject: `Your Brochure for ${coursePageData.courseTitle} from RiskInn`,
+                    subject: `Your Brochure for ${coursePageData.courseTitle} from Risk Inn`,
                     // message: `Thank you for your inquiry... Download brochure: ${coursePageData.brochureUrl}`, // Plain text fallback
                     html: emailHtml, // Send HTML email
                 });
