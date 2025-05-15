@@ -16,16 +16,19 @@ import courseContactDataRoutes from './routes/coursesContactRoutes.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 import { connect } from 'mongoose';
 
-// connectDB();
-
+async function connectToMongoDB() { 
+  console.log("Attempting to connect to MongoDB...");
   try {
     const conn = await connect(process.env.MONGODB_URI, {});
-
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log("MongoDB connected successfully.");
   } catch (error) {
-    console.error(`MongoDB Connection Error: ${error.message}`);
-    process.exit(1); // Exit process with failure
+    // This console.error is for your Vercel logs
+    console.error("MongoDB Connection Failure:", error.message); // More concise for logs
+    // console.error(error); // You can log the full error object for more details during debugging
+    process.exit(1); // Crucial: Exit if DB connection fails, Vercel will restart
   }
+}
+connectToMongoDB();
 
 const app = express();
 
